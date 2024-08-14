@@ -32,7 +32,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import moment from 'moment-timezone';
 import dayjs from 'dayjs';
 
-const API_URL = 'http://localhost:3000';
+const API_URL = 'https://reserva-rivera-node.vercel.app';
 
 const App = () => {
   const [darkMode, setDarkMode] = useState(true);
