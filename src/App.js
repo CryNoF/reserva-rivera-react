@@ -41,7 +41,7 @@ const theme = createTheme({
   },
 });
 
-const API_URL = 'http://localhost:3000';
+const API_URL = 'https://reserva-rivera-node.vercel.app';
 
 const App = () => {
   const [token, setToken] = useState('');
