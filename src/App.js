@@ -19,7 +19,12 @@ import {
   TableRow, 
   Snackbar,
   IconButton,
-  CssBaseline
+  CssBaseline,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle
 } from '@mui/material';
 import Brightness4Icon from '@mui/icons-material/Brightness4';
 import Brightness7Icon from '@mui/icons-material/Brightness7';
@@ -29,6 +34,7 @@ import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { createTheme, ThemeProvider, responsiveFontSizes } from '@mui/material/styles';
 import { blue, green, red, pink } from '@mui/material/colors';
 import DeleteIcon from '@mui/icons-material/Delete';
+import AddIcon from '@mui/icons-material/Add';
 import moment from 'moment-timezone';
 import dayjs from 'dayjs';
 
@@ -46,6 +52,8 @@ const App = () => {
   const [errorMessage, setErrorMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
   const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [openConfirmDialog, setOpenConfirmDialog] = useState(false);
+  const [reservaAConfirmar, setReservaAConfirmar] = useState(null);
 
   let lightTheme = createTheme({
     palette: {
@@ -94,6 +102,7 @@ const App = () => {
   darkTheme = responsiveFontSizes(darkTheme);
 
   const theme = darkMode ? darkTheme : lightTheme;
+
   const obtenerReservas = async (token) => {
     try {
       const response = await axios.get(`${API_URL}/reservas`, {
@@ -194,30 +203,35 @@ const App = () => {
     });
   };
 
-  const crearReserva = async () => {
+  const crearReserva = async (nuevaReserva = null) => {
     try {
-      const fechaReserva = moment(fechaSeleccionada)
-        .set({
-          hour: parseInt(hora.split(':')[0]),
-          minute: parseInt(hora.split(':')[1]),
-          second: 0
-        })
-        .tz('America/Santiago');
-  
-      const nuevaReserva = {
-        cancha: parseInt(cancha),
-        fecha: fechaReserva.format('YYYY-MM-DD HH:mm:00'),
-        id_reservador: 100,
-        recurrente: 0,
-        fecha_ingreso_reserva: moment().tz('America/Santiago').format('YYYY-MM-DD HH:mm:00')
-      };
+      let reservaACrear;
+      if (nuevaReserva) {
+        reservaACrear = nuevaReserva;
+      } else {
+        const fechaReserva = moment(fechaSeleccionada)
+          .set({
+            hour: parseInt(hora.split(':')[0]),
+            minute: parseInt(hora.split(':')[1]),
+            second: 0
+          })
+          .tz('America/Santiago');
+    
+        reservaACrear = {
+          cancha: parseInt(cancha),
+          fecha: fechaReserva.format('YYYY-MM-DD HH:mm:00'),
+          id_reservador: 100,
+          recurrente: 0,
+          fecha_ingreso_reserva: moment().tz('America/Santiago').format('YYYY-MM-DD HH:mm:00')
+        };
+      }
   
       const horaOcupada = reservasConUsuarios.some(reserva => {
         const fechaReservaExistente = moment(reserva.fecha).tz('America/Santiago');
         return (
-          fechaReservaExistente.isSame(fechaReserva, 'day') &&
-          fechaReservaExistente.hour() === fechaReserva.hour() &&
-          reserva.cancha === nuevaReserva.cancha
+          fechaReservaExistente.isSame(moment(reservaACrear.fecha), 'day') &&
+          fechaReservaExistente.hour() === moment(reservaACrear.fecha).hour() &&
+          reserva.cancha === reservaACrear.cancha
         );
       });
   
@@ -228,7 +242,7 @@ const App = () => {
         return;
       }
   
-      const response = await axios.post(`${API_URL}/reservas`, nuevaReserva, {
+      const response = await axios.post(`${API_URL}/reservas`, reservaACrear, {
         headers: { 'Authorization': token }
       });
   
@@ -284,6 +298,37 @@ const App = () => {
 
   const toggleDarkMode = () => {
     setDarkMode(!darkMode);
+  };
+
+  const handleOpenConfirmDialog = (hora, tipoCancha) => {
+    const fechaReserva = moment(fechaSeleccionada)
+      .set({
+        hour: hora,
+        minute: 0,
+        second: 0
+      })
+      .tz('America/Santiago');
+  
+    setReservaAConfirmar({
+      cancha: tipoCancha === 'techada' ? 0 : 1,
+      fecha: fechaReserva.format('YYYY-MM-DD HH:mm:00'),
+      id_reservador: 100,
+      recurrente: 0,
+      fecha_ingreso_reserva: moment().tz('America/Santiago').format('YYYY-MM-DD HH:mm:00')
+    });
+    setOpenConfirmDialog(true);
+  };
+  
+  const handleCloseConfirmDialog = () => {
+    setOpenConfirmDialog(false);
+    setReservaAConfirmar(null);
+  };
+  
+  const handleConfirmReserva = async () => {
+    if (reservaAConfirmar) {
+      await crearReserva(reservaAConfirmar);
+      handleCloseConfirmDialog();
+    }
   };
 
   return (
@@ -347,7 +392,7 @@ const App = () => {
                   <MenuItem value={1}>Cancha Aire Libre</MenuItem>
                 </Select>
               </FormControl>
-              <Button variant="contained" color="primary" onClick={crearReserva} fullWidth>
+              <Button variant="contained" color="primary" onClick={() => crearReserva()} fullWidth>
                 Reservar
               </Button>
             </Box>
@@ -396,7 +441,18 @@ const App = () => {
                                 </IconButton>
                               )}
                             </>
-                          ) : 'Libre'}
+                          ) : (
+                            <>
+                              Libre
+                              <IconButton 
+                                size="large" 
+                                onClick={() => handleOpenConfirmDialog(hour, 'techada')}
+                                style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)' }}
+                              >
+                                <AddIcon fontSize="large" />
+                              </IconButton>
+                            </>
+                          )}
                         </TableCell>
                         <TableCell style={{ 
                           backgroundColor: reservaAireLibre 
@@ -419,26 +475,60 @@ const App = () => {
                                 </IconButton>
                               )}
                             </>
-                          ) : 'Libre'}
+                          ) : (
+                            <>
+                              Libre
+                              <IconButton 
+                                size="large" 
+                                onClick={() => handleOpenConfirmDialog(hour, 'aireLibre')}
+                                style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)' }}
+                              >
+                                <AddIcon fontSize="large" />
+                              </IconButton>
+                            </>
+                          )}
                         </TableCell>
                       </TableRow>
                     );
                   })}
                 </TableBody>
-                </Table>
-              </TableContainer>
-            </Paper>
+              </Table>
+            </TableContainer>
+          </Paper>
   
-            <Snackbar
-              open={snackbarOpen}
-              autoHideDuration={6000}
-              onClose={handleCloseSnackbar}
-              message={errorMessage || successMessage}
-            />
-          </Container>
-        </Box>
-      </ThemeProvider>
-    );
-  };
-  
-  export default App;
+          <Snackbar
+            open={snackbarOpen}
+            autoHideDuration={6000}
+            onClose={handleCloseSnackbar}
+            message={errorMessage || successMessage}
+          />
+
+          <Dialog
+            open={openConfirmDialog}
+            onClose={handleCloseConfirmDialog}
+            aria-labelledby="alert-dialog-title"
+            aria-describedby="alert-dialog-description"
+          >
+            <DialogTitle id="alert-dialog-title">{"Confirmar Reserva"}</DialogTitle>
+            <DialogContent>
+              <DialogContentText id="alert-dialog-description">
+                ¿Está seguro que desea reservar esta hora?
+              </DialogContentText>
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={handleCloseConfirmDialog} color="primary">
+                Cancelar
+              </Button>
+              <Button onClick={handleConfirmReserva} color="primary" autoFocus>
+                Confirmar
+              </Button>
+            </DialogActions>
+          </Dialog>
+        </Container>
+      </Box>
+    </ThemeProvider>
+  );
+};
+
+export default App;
+            
