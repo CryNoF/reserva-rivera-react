@@ -17,33 +17,23 @@ import {
   TableContainer, 
   TableHead, 
   TableRow, 
-  Snackbar 
+  Snackbar,
+  IconButton
 } from '@mui/material';
+import Brightness4Icon from '@mui/icons-material/Brightness4';
+import Brightness7Icon from '@mui/icons-material/Brightness7';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
-import { blue, green, red } from '@mui/material/colors';
+import { blue, green, red, pink } from '@mui/material/colors';
 import moment from 'moment-timezone';
 import dayjs from 'dayjs';
-
-const theme = createTheme({
-  palette: {
-    primary: {
-      main: blue[500],
-    },
-    secondary: {
-      main: green[500],
-    },
-    error: {
-      main: red[500],
-    },
-  },
-});
 
 const API_URL = 'https://reserva-rivera-node.vercel.app';
 
 const App = () => {
+  const [darkMode, setDarkMode] = useState(false);
   const [token, setToken] = useState('');
   const [reservas, setReservas] = useState([]);
   const [usuarios, setUsuarios] = useState([]);
@@ -54,7 +44,51 @@ const App = () => {
   const [errorMessage, setErrorMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
   const [snackbarOpen, setSnackbarOpen] = useState(false);
-  
+
+  const lightTheme = createTheme({
+    palette: {
+      mode: 'light',
+      primary: {
+        main: blue[500],
+      },
+      secondary: {
+        main: green[500],
+      },
+      error: {
+        main: red[500],
+      },
+      background: {
+        default: '#fff',
+        paper: '#fff',
+      },
+    },
+  });
+
+  const darkTheme = createTheme({
+    palette: {
+      mode: 'dark',
+      primary: {
+        main: blue[300],
+      },
+      secondary: {
+        main: green[300],
+      },
+      error: {
+        main: red[300],
+      },
+      background: {
+        default: '#1a2635',
+        paper: '#233044',
+      },
+      text: {
+        primary: '#ffffff',
+        secondary: '#b0bec5',
+      },
+    },
+  });
+
+  const theme = darkMode ? darkTheme : lightTheme;
+
   const obtenerReservas = async (token) => {
     try {
       const response = await axios.get(`${API_URL}/reservas`, {
@@ -86,10 +120,7 @@ const App = () => {
 
   const obtenerToken = async () => {
     try {
-      const response = await axios.post(`${API_URL}/auth/login`, {
-        correo: 'camilonavarreteportino@gmail.com',
-        contraseña: '7889887',
-      });
+      const response = await axios.post(`${API_URL}/auth/login`, {});
       return response.data.token;
     } catch (error) {
       console.error('Error al obtener token:', error);
@@ -229,13 +260,26 @@ const App = () => {
     setSnackbarOpen(false);
   };
 
+  const toggleDarkMode = () => {
+    setDarkMode(!darkMode);
+  };
+
   return (
     <ThemeProvider theme={theme}>
-      <Container maxWidth="md">
-        <Box sx={{ my: 4 }}>
-          <Typography variant="h4" component="h1" gutterBottom>
-            Reservas Rivera Tennis Club
-          </Typography>
+      <Box sx={{ 
+        bgcolor: 'background.default', 
+        minHeight: '100vh', 
+        color: 'text.primary'
+      }}>
+        <Container maxWidth="md">
+          <Box sx={{ my: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Typography variant="h4" component="h1" gutterBottom>
+              Reservas Rivera Tennis Club
+            </Typography>
+            <IconButton sx={{ ml: 1 }} onClick={toggleDarkMode} color="inherit">
+              {darkMode ? <Brightness7Icon /> : <Brightness4Icon />}
+            </IconButton>
+          </Box>
           
           <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
             <Typography variant="h6" component="h2" gutterBottom>
@@ -306,7 +350,12 @@ const App = () => {
                     return (
                       <TableRow key={hour}>
                         <TableCell style={{ fontWeight: 'bold' }}>{`${hour.toString().padStart(2, '0')}:00`}</TableCell>
-                        <TableCell style={{ backgroundColor: reservaTechada ? red[500] : green[500], color: '#fff' }}>
+                        <TableCell style={{ 
+                          backgroundColor: reservaTechada 
+                            ? (darkMode ? pink[700] : red[500]) 
+                            : (darkMode ? '#CCFF00' : green[500]),
+                          color: darkMode && !reservaTechada ? '#000' : '#fff'
+                        }}>
                           {reservaTechada ? (
                             <>
                               <div>Ocupada</div>
@@ -314,7 +363,12 @@ const App = () => {
                             </>
                           ) : 'Libre'}
                         </TableCell>
-                        <TableCell style={{ backgroundColor: reservaAireLibre ? red[500] : green[500], color: '#fff' }}>
+                        <TableCell style={{ 
+                          backgroundColor: reservaAireLibre 
+                            ? (darkMode ? pink[700] : red[500]) 
+                            : (darkMode ? '#CCFF00' : green[500]),
+                          color: darkMode && !reservaAireLibre ? '#000' : '#fff'
+                        }}>
                           {reservaAireLibre ? (
                             <>
                               <div>Ocupada</div>
@@ -336,8 +390,8 @@ const App = () => {
             onClose={handleCloseSnackbar}
             message={errorMessage || successMessage}
           />
-        </Box>
-      </Container>
+        </Container>
+      </Box>
     </ThemeProvider>
   );
 };
