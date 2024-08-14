@@ -19,11 +19,13 @@ import {
   TableRow, 
   Snackbar 
 } from '@mui/material';
-import { LocalizationProvider, DatePicker } from '@mui/x-date-pickers';
-import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import { blue, green, red } from '@mui/material/colors';
 import moment from 'moment-timezone';
+import dayjs from 'dayjs';
 
 const theme = createTheme({
   palette: {
@@ -168,10 +170,10 @@ const App = () => {
   
       const nuevaReserva = {
         cancha: parseInt(cancha),
-        fecha: fechaReserva.format('YYYY-MM-DD HH:mm:00'), // Formato corregido
-        id_reservador: 100, // Asumimos que este es el ID del usuario actual
+        fecha: fechaReserva.format('YYYY-MM-DD HH:mm:00'),
+        id_reservador: 100,
         recurrente: 0,
-        fecha_ingreso_reserva: moment().tz('America/Santiago').format('YYYY-MM-DD HH:mm:00') // Formato corregido
+        fecha_ingreso_reserva: moment().tz('America/Santiago').format('YYYY-MM-DD HH:mm:00')
       };
   
       const horaOcupada = reservasConUsuarios.some(reserva => {
@@ -194,7 +196,6 @@ const App = () => {
         headers: { 'Authorization': token }
       });
   
-      // Actualizar el estado local con la nueva reserva
       const reservaCreada = response.data;
       const usuarioActual = usuarios.find(u => u.id === reservaCreada.id_reservador);
       const nuevaReservaConUsuario = {
@@ -238,50 +239,50 @@ const App = () => {
           
           <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
             <Typography variant="h6" component="h2" gutterBottom>
-                Crear Reserva
+              Crear Reserva
             </Typography>
             <Box component="form" noValidate autoComplete="off">
-                <FormControl fullWidth sx={{ mb: 2 }}>
-                <LocalizationProvider dateAdapter={AdapterDateFns}>
-                    <DatePicker
+              <FormControl fullWidth sx={{ mb: 2 }}>
+                <LocalizationProvider dateAdapter={AdapterDayjs}>
+                  <DatePicker
                     label="Fecha de reserva"
-                    value={fechaSeleccionada}
-                    onChange={(newValue) => setFechaSeleccionada(newValue)}
+                    value={dayjs(fechaSeleccionada)}
+                    onChange={(newValue) => setFechaSeleccionada(newValue.toDate())}
+                    minDate={dayjs()}
+                    maxDate={dayjs().add(7, 'day')}
                     renderInput={(params) => <TextField {...params} fullWidth />}
-                    minDate={new Date()}
-                    maxDate={new Date().setDate(new Date().getDate() + 7)}
-                    />
+                  />
                 </LocalizationProvider>
-                </FormControl>
-                <FormControl fullWidth sx={{ mb: 2 }}>
+              </FormControl>
+              <FormControl fullWidth sx={{ mb: 2 }}>
                 <InputLabel>Hora</InputLabel>
                 <Select
-                    value={hora}
-                    label="Hora"
-                    onChange={(e) => setHora(e.target.value)}
+                  value={hora}
+                  label="Hora"
+                  onChange={(e) => setHora(e.target.value)}
                 >
-                    {[...Array(16)].map((_, i) => {
+                  {[...Array(16)].map((_, i) => {
                     const hour = i + 7;
                     return <MenuItem key={hour} value={`${hour.toString().padStart(2, '0')}:00`}>{`${hour}:00`}</MenuItem>;
-                    })}
+                  })}
                 </Select>
-                </FormControl>
-                <FormControl fullWidth sx={{ mb: 2 }}>
+              </FormControl>
+              <FormControl fullWidth sx={{ mb: 2 }}>
                 <InputLabel>Cancha</InputLabel>
                 <Select
-                    value={cancha}
-                    label="Cancha"
-                    onChange={(e) => setCancha(e.target.value)}
+                  value={cancha}
+                  label="Cancha"
+                  onChange={(e) => setCancha(e.target.value)}
                 >
-                    <MenuItem value={0}>Cancha Techada</MenuItem>
-                    <MenuItem value={1}>Cancha Aire Libre</MenuItem>
+                  <MenuItem value={0}>Cancha Techada</MenuItem>
+                  <MenuItem value={1}>Cancha Aire Libre</MenuItem>
                 </Select>
-                </FormControl>
-                <Button variant="contained" color="primary" onClick={crearReserva} fullWidth>
+              </FormControl>
+              <Button variant="contained" color="primary" onClick={crearReserva} fullWidth>
                 Reservar
-                </Button>
+              </Button>
             </Box>
-            </Paper>
+          </Paper>
 
           <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
             <Typography variant="h6" component="h2" gutterBottom>
