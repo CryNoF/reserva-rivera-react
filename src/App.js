@@ -18,14 +18,15 @@ import {
   TableHead, 
   TableRow, 
   Snackbar,
-  IconButton
+  IconButton,
+  CssBaseline
 } from '@mui/material';
 import Brightness4Icon from '@mui/icons-material/Brightness4';
 import Brightness7Icon from '@mui/icons-material/Brightness7';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
-import { createTheme, ThemeProvider } from '@mui/material/styles';
+import { createTheme, ThemeProvider, responsiveFontSizes } from '@mui/material/styles';
 import { blue, green, red, pink } from '@mui/material/colors';
 import moment from 'moment-timezone';
 import dayjs from 'dayjs';
@@ -45,7 +46,7 @@ const App = () => {
   const [successMessage, setSuccessMessage] = useState('');
   const [snackbarOpen, setSnackbarOpen] = useState(false);
 
-  const lightTheme = createTheme({
+  let lightTheme = createTheme({
     palette: {
       mode: 'light',
       primary: {
@@ -64,7 +65,7 @@ const App = () => {
     },
   });
 
-  const darkTheme = createTheme({
+  let darkTheme = createTheme({
     palette: {
       mode: 'dark',
       primary: {
@@ -86,6 +87,10 @@ const App = () => {
       },
     },
   });
+
+  // Hacer los temas responsivos
+  lightTheme = responsiveFontSizes(lightTheme);
+  darkTheme = responsiveFontSizes(darkTheme);
 
   const theme = darkMode ? darkTheme : lightTheme;
 
@@ -266,14 +271,17 @@ const App = () => {
 
   return (
     <ThemeProvider theme={theme}>
+      <CssBaseline />
       <Box sx={{ 
         bgcolor: 'background.default', 
         minHeight: '100vh', 
-        color: 'text.primary'
+        color: 'text.primary',
+        display: 'flex',
+        flexDirection: 'column'
       }}>
-        <Container maxWidth="md">
+        <Container maxWidth="md" sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
           <Box sx={{ my: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <Typography variant="h4" component="h1" gutterBottom>
+            <Typography variant="h4" component="h1" gutterBottom noWrap sx={{ flexGrow: 1, fontSize: { xs: '1.5rem', sm: '2rem', md: '2.5rem' } }}>
               Reservas Rivera Tennis Club
             </Typography>
             <IconButton sx={{ ml: 1 }} onClick={toggleDarkMode} color="inherit">
@@ -379,21 +387,21 @@ const App = () => {
                       </TableRow>
                     );
                   })}
-                </TableBody>
-              </Table>
-            </TableContainer>
-          </Paper>
-
-          <Snackbar
-            open={snackbarOpen}
-            autoHideDuration={6000}
-            onClose={handleCloseSnackbar}
-            message={errorMessage || successMessage}
-          />
-        </Container>
-      </Box>
-    </ThemeProvider>
-  );
-};
-
-export default App;
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            </Paper>
+  
+            <Snackbar
+              open={snackbarOpen}
+              autoHideDuration={6000}
+              onClose={handleCloseSnackbar}
+              message={errorMessage || successMessage}
+            />
+          </Container>
+        </Box>
+      </ThemeProvider>
+    );
+  };
+  
+  export default App;
