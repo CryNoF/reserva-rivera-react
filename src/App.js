@@ -28,20 +28,21 @@ import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { createTheme, ThemeProvider, responsiveFontSizes } from '@mui/material/styles';
 import { blue, green, red, pink } from '@mui/material/colors';
+import DeleteIcon from '@mui/icons-material/Delete';
 import moment from 'moment-timezone';
 import dayjs from 'dayjs';
 
-const API_URL = 'https://reserva-rivera-node.vercel.app';
+const API_URL = 'http://localhost:3000';
 
 const App = () => {
-  const [darkMode, setDarkMode] = useState(false);
+  const [darkMode, setDarkMode] = useState(true);
   const [token, setToken] = useState('');
   const [reservas, setReservas] = useState([]);
   const [usuarios, setUsuarios] = useState([]);
   const [reservasConUsuarios, setReservasConUsuarios] = useState([]);
   const [fechaSeleccionada, setFechaSeleccionada] = useState(new Date());
   const [hora, setHora] = useState('07:00');
-  const [cancha, setCancha] = useState(0);
+  const [cancha, setCancha] = useState(1);
   const [errorMessage, setErrorMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
   const [snackbarOpen, setSnackbarOpen] = useState(false);
@@ -59,7 +60,7 @@ const App = () => {
         main: red[500],
       },
       background: {
-        default: '#fff',
+        default: '#f7f9fc',
         paper: '#fff',
       },
     },
@@ -93,7 +94,6 @@ const App = () => {
   darkTheme = responsiveFontSizes(darkTheme);
 
   const theme = darkMode ? darkTheme : lightTheme;
-
   const obtenerReservas = async (token) => {
     try {
       const response = await axios.get(`${API_URL}/reservas`, {
@@ -244,9 +244,26 @@ const App = () => {
       setSuccessMessage('Reserva creada con éxito.');
       setErrorMessage('');
       setSnackbarOpen(true);
+      await obtenerDatos(localStorage.getItem('token'));
     } catch (error) {
       console.error('Error al crear reserva:', error);
       setErrorMessage('Error al crear la reserva. Por favor, intente de nuevo.');
+      setSnackbarOpen(true);
+    }
+  };
+
+  const eliminarReserva = async (idReserva) => {
+    try {
+      await axios.delete(`${API_URL}/reservas/${idReserva}`, {
+        headers: { 'Authorization': token }
+      });
+      
+      setReservasConUsuarios(prevReservas => prevReservas.filter(reserva => reserva.id !== idReserva));
+      setSuccessMessage('Reserva eliminada con éxito.');
+      setSnackbarOpen(true);
+    } catch (error) {
+      console.error('Error al eliminar reserva:', error);
+      setErrorMessage('Error al eliminar la reserva. Por favor, intente de nuevo.');
       setSnackbarOpen(true);
     }
   };
@@ -360,34 +377,54 @@ const App = () => {
                         <TableCell style={{ fontWeight: 'bold' }}>{`${hour.toString().padStart(2, '0')}:00`}</TableCell>
                         <TableCell style={{ 
                           backgroundColor: reservaTechada 
-                            ? (darkMode ? pink[700] : red[500]) 
-                            : (darkMode ? '#CCFF00' : green[500]),
-                          color: darkMode && !reservaTechada ? '#000' : '#fff'
+                            ? (darkMode ? pink[700] : '#d02037') 
+                            : (darkMode ? '#CCFF00' : '#6fc749'),
+                          color: darkMode && !reservaTechada ? '#000' : '#fff',
+                          position: 'relative'
                         }}>
                           {reservaTechada ? (
                             <>
                               <div>Ocupada</div>
                               <div style={{ fontSize: '0.8em' }}>{reservaTechada.nombreUsuario}</div>
+                              {reservaTechada.id_reservador === 100 && (
+                                <IconButton 
+                                  size="small" 
+                                  onClick={() => eliminarReserva(reservaTechada.id)}
+                                  style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)' }}
+                                >
+                                  <DeleteIcon fontSize="small" />
+                                </IconButton>
+                              )}
                             </>
                           ) : 'Libre'}
                         </TableCell>
                         <TableCell style={{ 
                           backgroundColor: reservaAireLibre 
-                            ? (darkMode ? pink[700] : red[500]) 
-                            : (darkMode ? '#CCFF00' : green[500]),
-                          color: darkMode && !reservaAireLibre ? '#000' : '#fff'
+                            ? (darkMode ? pink[700] : '#d02037') 
+                            : (darkMode ? '#CCFF00' : '#6fc749'),
+                          color: darkMode && !reservaAireLibre ? '#000' : '#fff',
+                          position: 'relative'
                         }}>
                           {reservaAireLibre ? (
                             <>
                               <div>Ocupada</div>
                               <div style={{ fontSize: '0.8em' }}>{reservaAireLibre.nombreUsuario}</div>
+                              {reservaAireLibre.id_reservador === 100 && (
+                                <IconButton 
+                                  size="small" 
+                                  onClick={() => eliminarReserva(reservaAireLibre.id)}
+                                  style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)' }}
+                                >
+                                  <DeleteIcon fontSize="small" />
+                                </IconButton>
+                              )}
                             </>
                           ) : 'Libre'}
                         </TableCell>
                       </TableRow>
                     );
                   })}
-                  </TableBody>
+                </TableBody>
                 </Table>
               </TableContainer>
             </Paper>
