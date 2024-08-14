@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import { 
   Container, 
@@ -55,75 +55,6 @@ const App = () => {
   const [successMessage, setSuccessMessage] = useState('');
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   
-  useEffect(() => {
-    const inicializarApp = async () => {
-      try {
-        const tokenAlmacenado = localStorage.getItem('token');
-        if (tokenAlmacenado) {
-          if (await verificarToken(tokenAlmacenado)) {
-            setToken(tokenAlmacenado);
-            await obtenerDatos(tokenAlmacenado);
-          } else {
-            await realizarLogin();
-          }
-        } else {
-          await realizarLogin();
-        }
-      } catch (error) {
-        console.error('Error al inicializar la app:', error);
-      }
-    };
-    inicializarApp();
-  }, []);
-
-  useEffect(() => {
-    if (reservas.length > 0 && usuarios.length > 0) {
-      const reservasMapeadas = mapearReservasConUsuarios(reservas, usuarios);
-      setReservasConUsuarios(reservasMapeadas);
-    }
-  }, [reservas, usuarios]);
-
-  const verificarToken = async (token) => {
-    try {
-      const response = await axios.post(`${API_URL}/auth/verify-token`, { token }, {
-        headers: { 'Authorization': token }
-      });
-      return response.data.valido;
-    } catch (error) {
-      console.error('Error al verificar token:', error);
-      return false;
-    }
-  };
-
-  const realizarLogin = async () => {
-    try {
-      const tokenObtenido = await obtenerToken();
-      setToken(tokenObtenido);
-      localStorage.setItem('token', tokenObtenido);
-      await obtenerDatos(tokenObtenido);
-    } catch (error) {
-      console.error('Error al realizar login:', error);
-    }
-  };
-
-  const obtenerDatos = async (token) => {
-    await obtenerReservas(token);
-    await obtenerUsuarios(token);
-  };
-
-  const obtenerToken = async () => {
-    try {
-      const response = await axios.post(`${API_URL}/auth/login`, {
-        correo: 'camilonavarreteportino@gmail.com',
-        contraseña: '7889887',
-      });
-      return response.data.token;
-    } catch (error) {
-      console.error('Error al obtener token:', error);
-      throw error;
-    }
-  };
-
   const obtenerReservas = async (token) => {
     try {
       const response = await axios.get(`${API_URL}/reservas`, {
@@ -147,6 +78,75 @@ const App = () => {
       setUsuarios([]);
     }
   };
+
+  const obtenerDatos = useCallback(async (token) => {
+    await obtenerReservas(token);
+    await obtenerUsuarios(token);
+  }, []);
+
+  const obtenerToken = async () => {
+    try {
+      const response = await axios.post(`${API_URL}/auth/login`, {
+        correo: 'camilonavarreteportino@gmail.com',
+        contraseña: '7889887',
+      });
+      return response.data.token;
+    } catch (error) {
+      console.error('Error al obtener token:', error);
+      throw error;
+    }
+  };
+
+  const realizarLogin = useCallback(async () => {
+    try {
+      const tokenObtenido = await obtenerToken();
+      setToken(tokenObtenido);
+      localStorage.setItem('token', tokenObtenido);
+      await obtenerDatos(tokenObtenido);
+    } catch (error) {
+      console.error('Error al realizar login:', error);
+    }
+  }, [obtenerDatos]);
+
+  const verificarToken = async (token) => {
+    try {
+      const response = await axios.post(`${API_URL}/auth/verify-token`, { token }, {
+        headers: { 'Authorization': token }
+      });
+      return response.data.valido;
+    } catch (error) {
+      console.error('Error al verificar token:', error);
+      return false;
+    }
+  };
+
+  useEffect(() => {
+    const inicializarApp = async () => {
+      try {
+        const tokenAlmacenado = localStorage.getItem('token');
+        if (tokenAlmacenado) {
+          if (await verificarToken(tokenAlmacenado)) {
+            setToken(tokenAlmacenado);
+            await obtenerDatos(tokenAlmacenado);
+          } else {
+            await realizarLogin();
+          }
+        } else {
+          await realizarLogin();
+        }
+      } catch (error) {
+        console.error('Error al inicializar la app:', error);
+      }
+    };
+    inicializarApp();
+  }, [obtenerDatos, realizarLogin]);
+
+  useEffect(() => {
+    if (reservas.length > 0 && usuarios.length > 0) {
+      const reservasMapeadas = mapearReservasConUsuarios(reservas, usuarios);
+      setReservasConUsuarios(reservasMapeadas);
+    }
+  }, [reservas, usuarios]);
 
   const mapearReservasConUsuarios = (reservas, usuarios) => {
     return reservas.map(reserva => {
