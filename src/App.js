@@ -25,7 +25,8 @@ import {
   DialogContent,
   DialogContentText,
   DialogTitle,
-  Pagination
+  Pagination,
+  CircularProgress
 } from '@mui/material';
 import Brightness4Icon from '@mui/icons-material/Brightness4';
 import Brightness7Icon from '@mui/icons-material/Brightness7';
@@ -58,6 +59,8 @@ const App = () => {
   const [reservaAConfirmar, setReservaAConfirmar] = useState(null);
   const [pastReservasPage, setPastReservasPage] = useState(1);
   const [pastReservasPerPage] = useState(7);
+  const [loadingReservas, setLoadingReservas] = useState(true);
+  const [loadingPastReservas, setLoadingPastReservas] = useState(true);
 
   let lightTheme = createTheme({
     palette: {
@@ -108,6 +111,7 @@ const App = () => {
   const theme = darkMode ? darkTheme : lightTheme;
 
   const obtenerReservas = async (token) => {
+    setLoadingReservas(true);
     try {
       const response = await axios.get(`${API_URL}/reservas`, {
         headers: { 'Authorization': token }
@@ -116,6 +120,8 @@ const App = () => {
     } catch (error) {
       console.error('Error al obtener reservas:', error);
       setReservas([]);
+    } finally {
+      setLoadingReservas(false);
     }
   };
 
@@ -194,6 +200,7 @@ const App = () => {
     if (reservas.length > 0 && usuarios.length > 0) {
       const reservasMapeadas = mapearReservasConUsuarios(reservas, usuarios);
       setReservasConUsuarios(reservasMapeadas);
+      setLoadingPastReservas(false);
     }
   }, [reservas, usuarios]);
 
@@ -377,8 +384,6 @@ const App = () => {
                     label="Fecha de reserva"
                     value={dayjs(fechaSeleccionada)}
                     onChange={(newValue) => setFechaSeleccionada(newValue.toDate())}
-                    //minDate={dayjs()}
-                    //maxDate={dayjs().add(7, 'day')}
                     renderInput={(params) => <TextField {...params} fullWidth />}
                   />
                 </LocalizationProvider>
@@ -430,151 +435,167 @@ const App = () => {
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {[...Array(16)].map((_, i) => {
-                    const hour = i + 7;
-                    const reservaTechada = horasOcupadas.techada.find(r => moment(r.fecha).hour() === hour);
-                    const reservaAireLibre = horasOcupadas.aireLibre.find(r => moment(r.fecha).hour() === hour);
-                    
-                    return (
-                      <TableRow key={hour}>
-                        <TableCell style={{ fontWeight: 'bold' }}>{`${hour.toString().padStart(2, '0')}:00`}</TableCell>
-                        <TableCell style={{ 
-                          backgroundColor: reservaTechada 
-                            ? (darkMode ? pink[700] : '#d02037') 
-                            : (darkMode ? '#CCFF00' : '#6fc749'),
-                          color: darkMode && !reservaTechada ? '#000' : '#fff',
-                          position: 'relative'
-                        }}>
-                          {reservaTechada ? (
-                            <>
-                              <div>Ocupada</div>
-                              <div style={{ fontSize: '0.8em' }}>{reservaTechada.nombreUsuario}</div>
-                              {reservaTechada.id_reservador === 100 && (
+                  {loadingReservas ? (
+                    <TableRow>
+                      <TableCell colSpan={3} align="center">
+                        <CircularProgress />
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    [...Array(16)].map((_, i) => {
+                      const hour = i + 7;
+                      const reservaTechada = horasOcupadas.techada.find(r => moment(r.fecha).hour() === hour);
+                      const reservaAireLibre = horasOcupadas.aireLibre.find(r => moment(r.fecha).hour() === hour);
+                      
+                      return (
+                        <TableRow key={hour}>
+                          <TableCell style={{ fontWeight: 'bold' }}>{`${hour.toString().padStart(2, '0')}:00`}</TableCell>
+                          <TableCell style={{ 
+                            backgroundColor: reservaTechada 
+                              ? (darkMode ? pink[700] : '#d02037') 
+                              : (darkMode ? '#CCFF00' : '#6fc749'),
+                            color: darkMode && !reservaTechada ? '#000' : '#fff',
+                            position: 'relative'
+                          }}>
+                            {reservaTechada ? (
+                              <>
+                                <div>Ocupada</div>
+                                <div style={{ fontSize: '0.8em' }}>{reservaTechada.nombreUsuario}</div>
+                                {reservaTechada.id_reservador === 100 && (
+                                  <IconButton 
+                                    size="small" 
+                                    onClick={() => eliminarReserva(reservaTechada.id)}
+                                    style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)' }}
+                                  >
+                                    <DeleteIcon fontSize="small" />
+                                  </IconButton>
+                                )}
+                              </>
+                            ) : (
+                              <>
+                                Libre
                                 <IconButton 
-                                  size="small" 
-                                  onClick={() => eliminarReserva(reservaTechada.id)}
+                                  size="large" 
+                                  onClick={() => handleOpenConfirmDialog(hour, 'techada')}
                                   style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)' }}
                                 >
-                                  <DeleteIcon fontSize="small" />
+                                  <AddIcon fontSize="large" />
                                 </IconButton>
-                              )}
-                            </>
-                          ) : (
-                            <>
-                              Libre
-                              <IconButton 
-                                size="large" 
-                                onClick={() => handleOpenConfirmDialog(hour, 'techada')}
-                                style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)' }}
-                              >
-                                <AddIcon fontSize="large" />
-                              </IconButton>
-                            </>
-                          )}
-                        </TableCell>
-                        <TableCell style={{ 
-                          backgroundColor: reservaAireLibre 
-                            ? (darkMode ? pink[700] : '#d02037') 
-                            : (darkMode ? '#CCFF00' : '#6fc749'),
-                          color: darkMode && !reservaAireLibre ? '#000' : '#fff',
-                          position: 'relative'
-                        }}>
-                          {reservaAireLibre ? (
-                            <>
-                              <div>Ocupada</div>
-                              <div style={{ fontSize: '0.8em' }}>{reservaAireLibre.nombreUsuario}</div>
-                              {reservaAireLibre.id_reservador === 100 && (
+                              </>
+                            )}
+                          </TableCell>
+                          <TableCell style={{ 
+                            backgroundColor: reservaAireLibre 
+                              ? (darkMode ? pink[700] : '#d02037') 
+                              : (darkMode ? '#CCFF00' : '#6fc749'),
+                            color: darkMode && !reservaAireLibre ? '#000' : '#fff',
+                            position: 'relative'
+                          }}>
+                            {reservaAireLibre ? (
+                              <>
+                                <div>Ocupada</div>
+                                <div style={{ fontSize: '0.8em' }}>{reservaAireLibre.nombreUsuario}</div>
+                                {reservaAireLibre.id_reservador === 100 && (
+                                  <IconButton 
+                                    size="small" 
+                                    onClick={() => eliminarReserva(reservaAireLibre.id)}
+                                    style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)' }}
+                                  >
+                                    <DeleteIcon fontSize="small" />
+                                  </IconButton>
+                                )}
+                              </>
+                            ) : (
+                              <>
+                                Libre
                                 <IconButton 
-                                  size="small" 
-                                  onClick={() => eliminarReserva(reservaAireLibre.id)}
+                                  size="large" 
+                                  onClick={() => handleOpenConfirmDialog(hour, 'aireLibre')}
                                   style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)' }}
                                 >
-                                  <DeleteIcon fontSize="small" />
+                                  <AddIcon fontSize="large" />
                                 </IconButton>
-                              )}
-                            </>
-                          ) : (
-                            <>
-                              Libre
-                              <IconButton 
-                                size="large" 
-                                onClick={() => handleOpenConfirmDialog(hour, 'aireLibre')}
-                                style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)' }}
-                              >
-                                <AddIcon fontSize="large" />
-                              </IconButton>
-                            </>
-                          )}
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
+                              </>
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })
+                  )}
                 </TableBody>
               </Table>
             </TableContainer>
           </Paper>
           <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
-        <Typography variant="h6" component="h2" gutterBottom>
-          Reservas Anteriores del Usuario
-        </Typography>
-        <TableContainer component={Paper}>
-          <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell style={{ fontWeight: 'bold' }}>Fecha</TableCell>
-                <TableCell style={{ fontWeight: 'bold' }}>Hora</TableCell>
-                <TableCell style={{ fontWeight: 'bold' }}>Cancha</TableCell>
-                <TableCell style={{ fontWeight: 'bold' }}></TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {currentPastReservas.map(reserva => {
-                const reservaDate = moment(reserva.fecha);
-                const isWithinLastWeek = moment().diff(reservaDate, 'days') <= 7 && reservaDate.isBefore(moment(), 'day');
-                const dayOfWeek = reservaDate.day(); // 0 es domingo, 6 es sábado
-                const hour = reservaDate.hour();
-
-                const isHighlightedTime = 
-                  (dayOfWeek >= 1 && dayOfWeek <= 5 && hour >= 18 && hour < 23) || // Lunes a Viernes de 18:00 a 22:59
-                  (dayOfWeek === 6 && hour >= 8 && hour < 14); // Sábado de 8:00 a 13:59
-
-                const shouldHighlight = isWithinLastWeek && isHighlightedTime;
-
-                const cellStyle = shouldHighlight
-                  ? { backgroundColor: darkMode ? pink[700] : '#d02037', color: '#fff' }
-                  : {};
-
-                return (
-                  <TableRow key={reserva.id}>
-                    <TableCell style={cellStyle}>
-                      {reservaDate.format('DD-MM-YYYY')}
-                    </TableCell>
-                    <TableCell style={cellStyle}>
-                      {reservaDate.format('HH:mm')}
-                    </TableCell>
-                    <TableCell style={cellStyle}>{reserva.cancha === 0 ? 'Techada' : 'Aire Libre'}</TableCell>
-                    <TableCell align="left" style={cellStyle}>
-                      <IconButton 
-                        size="small" 
-                        onClick={() => eliminarReserva(reserva.id)}
-                      >
-                        <DeleteIcon fontSize="small" />
-                      </IconButton>
-                    </TableCell>
+            <Typography variant="h6" component="h2" gutterBottom>
+              Reservas Anteriores del Usuario
+            </Typography>
+            <TableContainer component={Paper}>
+              <Table>
+                <TableHead>
+                  <TableRow>
+                    <TableCell style={{ fontWeight: 'bold' }}>Fecha</TableCell>
+                    <TableCell style={{ fontWeight: 'bold' }}>Hora</TableCell>
+                    <TableCell style={{ fontWeight: 'bold' }}>Cancha</TableCell>
+                    <TableCell style={{ fontWeight: 'bold' }}></TableCell>
                   </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
-        </TableContainer>
-        <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>
-          <Pagination
-            count={Math.ceil(pastReservas.length / pastReservasPerPage)}
-            page={pastReservasPage}
-            onChange={handlePastReservasPageChange}
-          />
-        </Box>
-      </Paper>
+                </TableHead>
+                <TableBody>
+                  {loadingPastReservas ? (
+                    <TableRow>
+                      <TableCell colSpan={4} align="center">
+                        <CircularProgress />
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    currentPastReservas.map(reserva => {
+                      const reservaDate = moment(reserva.fecha);
+                      const isWithinLastWeek = moment().diff(reservaDate, 'days') <= 7 && reservaDate.isBefore(moment(), 'day');
+                      const dayOfWeek = reservaDate.day();
+                      const hour = reservaDate.hour();
+
+                      const isHighlightedTime = 
+                        (dayOfWeek >= 1 && dayOfWeek <= 5 && hour >= 18 && hour < 23) ||
+                        (dayOfWeek === 6 && hour >= 8 && hour < 14);
+
+                      const shouldHighlight = isWithinLastWeek && isHighlightedTime;
+
+                      const cellStyle = shouldHighlight
+                        ? { backgroundColor: darkMode ? pink[700] : '#d02037', color: '#fff' }
+                        : {};
+
+                      return (
+                        <TableRow key={reserva.id}>
+                          <TableCell style={cellStyle}>
+                            {reservaDate.format('DD-MM-YYYY')}
+                          </TableCell>
+                          <TableCell style={cellStyle}>
+                            {reservaDate.format('HH:mm')}
+                          </TableCell>
+                          <TableCell style={cellStyle}>{reserva.cancha === 0 ? 'Techada' : 'Aire Libre'}</TableCell>
+                          <TableCell align="left" style={cellStyle}>
+                            <IconButton 
+                              size="small" 
+                              onClick={() => eliminarReserva(reserva.id)}
+                            >
+                              <DeleteIcon fontSize="small" />
+                            </IconButton>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })
+                  )}
+                </TableBody>
+              </Table>
+            </TableContainer>
+            <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>
+              <Pagination
+                count={Math.ceil(pastReservas.length / pastReservasPerPage)}
+                page={pastReservasPage}
+                onChange={handlePastReservasPageChange}
+              />
+            </Box>
+          </Paper>
   
           <Snackbar
             open={snackbarOpen}
@@ -611,4 +632,3 @@ const App = () => {
 };
 
 export default App;
-            
