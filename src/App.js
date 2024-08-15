@@ -209,25 +209,24 @@ const App = () => {
       if (nuevaReserva) {
         reservaACrear = nuevaReserva;
       } else {
-        const fechaReserva = moment(fechaSeleccionada)
+        const fechaReserva = moment(fechaSeleccionada).utc()
           .set({
             hour: parseInt(hora.split(':')[0]),
             minute: parseInt(hora.split(':')[1]),
             second: 0
-          })
-          .tz('America/Santiago');
+          });
     
         reservaACrear = {
           cancha: parseInt(cancha),
           fecha: fechaReserva.format('YYYY-MM-DD HH:mm:00'),
           id_reservador: 100,
           recurrente: 0,
-          fecha_ingreso_reserva: moment().tz('America/Santiago').format('YYYY-MM-DD HH:mm:00')
+          fecha_ingreso_reserva: moment().utc().format('YYYY-MM-DD HH:mm:00')
         };
       }
   
       const horaOcupada = reservasConUsuarios.some(reserva => {
-        const fechaReservaExistente = moment(reserva.fecha).tz('America/Santiago');
+        const fechaReservaExistente = moment(reserva.fecha).utc();
         return (
           fechaReservaExistente.isSame(moment(reservaACrear.fecha), 'day') &&
           fechaReservaExistente.hour() === moment(reservaACrear.fecha).hour() &&
