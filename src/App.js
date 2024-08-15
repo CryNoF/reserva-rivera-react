@@ -528,21 +528,42 @@ const App = () => {
               </TableRow>
             </TableHead>
             <TableBody>
-              {currentPastReservas.map(reserva => (
-                <TableRow key={reserva.id}>
-                  <TableCell>{moment(reserva.fecha).format('DD-MM-YYYY')}</TableCell>
-                  <TableCell>{moment(reserva.fecha).format('HH:mm')}</TableCell>
-                  <TableCell>{reserva.cancha === 0 ? 'Techada' : 'Aire Libre'}</TableCell>
-                  <TableCell align="left">
-                    <IconButton 
-                      size="small" 
-                      onClick={() => eliminarReserva(reserva.id)}
-                    >
-                      <DeleteIcon fontSize="small" />
-                    </IconButton>
-                </TableCell>
-                </TableRow>
-              ))}
+              {currentPastReservas.map(reserva => {
+                const reservaDate = moment(reserva.fecha);
+                const isWithinLastWeek = moment().diff(reservaDate, 'days') <= 7 && reservaDate.isBefore(moment(), 'day');
+                const dayOfWeek = reservaDate.day(); // 0 es domingo, 6 es sábado
+                const hour = reservaDate.hour();
+
+                const isHighlightedTime = 
+                  (dayOfWeek >= 1 && dayOfWeek <= 5 && hour >= 18 && hour < 23) || // Lunes a Viernes de 18:00 a 22:59
+                  (dayOfWeek === 6 && hour >= 8 && hour < 14); // Sábado de 8:00 a 13:59
+
+                const shouldHighlight = isWithinLastWeek && isHighlightedTime;
+
+                const cellStyle = shouldHighlight
+                  ? { backgroundColor: darkMode ? pink[700] : '#d02037', color: '#fff' }
+                  : {};
+
+                return (
+                  <TableRow key={reserva.id}>
+                    <TableCell style={cellStyle}>
+                      {reservaDate.format('DD-MM-YYYY')}
+                    </TableCell>
+                    <TableCell style={cellStyle}>
+                      {reservaDate.format('HH:mm')}
+                    </TableCell>
+                    <TableCell style={cellStyle}>{reserva.cancha === 0 ? 'Techada' : 'Aire Libre'}</TableCell>
+                    <TableCell align="left" style={cellStyle}>
+                      <IconButton 
+                        size="small" 
+                        onClick={() => eliminarReserva(reserva.id)}
+                      >
+                        <DeleteIcon fontSize="small" />
+                      </IconButton>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
             </TableBody>
           </Table>
         </TableContainer>
