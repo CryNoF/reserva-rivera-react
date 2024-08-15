@@ -37,6 +37,7 @@ import { blue, green, red, pink } from '@mui/material/colors';
 import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
 import moment from 'moment-timezone';
+import 'moment/locale/es';
 import dayjs from 'dayjs';
 
 const API_URL = 'https://reserva-rivera-node.vercel.app';
@@ -413,9 +414,12 @@ const App = () => {
           </Paper>
 
           <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
-            <Typography variant="h6" component="h2" gutterBottom>
-              Horarios de Reservas
-            </Typography>
+          <Typography variant="h6" component="h2" gutterBottom>
+            Horarios de Reservas 
+            <span style={{ float: 'right' }}>
+              {moment(fechaSeleccionada).format('dddd DD-MM-YYYY').charAt(0).toUpperCase() + moment(fechaSeleccionada).format('dddd DD-MM-YYYY').slice(1)}
+            </span>
+          </Typography>
             <TableContainer component={Paper}>
               <Table>
                 <TableHead>
