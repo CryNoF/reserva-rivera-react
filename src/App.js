@@ -209,12 +209,12 @@ const App = () => {
       if (nuevaReserva) {
         reservaACrear = nuevaReserva;
       } else {
-        const fechaReserva = moment(fechaSeleccionada).utc()
-          .set({
-            hour: parseInt(hora.split(':')[0]),
-            minute: parseInt(hora.split(':')[1]),
-            second: 0
-          });
+        const fechaReserva = moment(fechaSeleccionada).tz('America/Santiago')
+        .set({
+          hour: parseInt(hora.split(':')[0]),
+          minute: parseInt(hora.split(':')[1]),
+          second: 0
+        });
     
         reservaACrear = {
           cancha: parseInt(cancha),
