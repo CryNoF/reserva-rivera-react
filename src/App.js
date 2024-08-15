@@ -24,7 +24,8 @@ import {
   DialogActions,
   DialogContent,
   DialogContentText,
-  DialogTitle
+  DialogTitle,
+  Pagination
 } from '@mui/material';
 import Brightness4Icon from '@mui/icons-material/Brightness4';
 import Brightness7Icon from '@mui/icons-material/Brightness7';
@@ -330,6 +331,21 @@ const App = () => {
     }
   };
 
+  const [pastReservasPage, setPastReservasPage] = useState(1);
+  const [pastReservasPerPage] = useState(7);
+
+  const pastReservas = reservasConUsuarios.filter(reserva => (
+    reserva.id_reservador === 100 && moment(reserva.fecha).isBefore(moment(fechaSeleccionada), 'day')
+  ));
+
+  const indexOfLastPastReserva = pastReservasPage * pastReservasPerPage;
+  const indexOfFirstPastReserva = indexOfLastPastReserva - pastReservasPerPage;
+  const currentPastReservas = pastReservas.slice(indexOfFirstPastReserva, indexOfLastPastReserva);
+
+  const handlePastReservasPageChange = (event, page) => {
+    setPastReservasPage(page);
+  };
+
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
@@ -361,8 +377,8 @@ const App = () => {
                     label="Fecha de reserva"
                     value={dayjs(fechaSeleccionada)}
                     onChange={(newValue) => setFechaSeleccionada(newValue.toDate())}
-                    minDate={dayjs()}
-                    maxDate={dayjs().add(7, 'day')}
+                    //minDate={dayjs()}
+                    //maxDate={dayjs().add(7, 'day')}
                     renderInput={(params) => <TextField {...params} fullWidth />}
                   />
                 </LocalizationProvider>
@@ -494,6 +510,47 @@ const App = () => {
               </Table>
             </TableContainer>
           </Paper>
+          <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
+        <Typography variant="h6" component="h2" gutterBottom>
+          Reservas Anteriores del Usuario
+        </Typography>
+        <TableContainer component={Paper}>
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell style={{ fontWeight: 'bold' }}>Fecha</TableCell>
+                <TableCell style={{ fontWeight: 'bold' }}>Hora</TableCell>
+                <TableCell style={{ fontWeight: 'bold' }}>Cancha</TableCell>
+                <TableCell style={{ fontWeight: 'bold' }}></TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {currentPastReservas.map(reserva => (
+                <TableRow key={reserva.id}>
+                  <TableCell>{moment(reserva.fecha).format('DD-MM-YYYY')}</TableCell>
+                  <TableCell>{moment(reserva.fecha).format('HH:mm')}</TableCell>
+                  <TableCell>{reserva.cancha === 0 ? 'Techada' : 'Aire Libre'}</TableCell>
+                  <TableCell align="left">
+                    <IconButton 
+                      size="small" 
+                      onClick={() => eliminarReserva(reserva.id)}
+                    >
+                      <DeleteIcon fontSize="small" />
+                    </IconButton>
+                </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
+        <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>
+          <Pagination
+            count={Math.ceil(pastReservas.length / pastReservasPerPage)}
+            page={pastReservasPage}
+            onChange={handlePastReservasPageChange}
+          />
+        </Box>
+      </Paper>
   
           <Snackbar
             open={snackbarOpen}
