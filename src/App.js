@@ -55,6 +55,8 @@ const App = () => {
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [openConfirmDialog, setOpenConfirmDialog] = useState(false);
   const [reservaAConfirmar, setReservaAConfirmar] = useState(null);
+  const [pastReservasPage, setPastReservasPage] = useState(1);
+  const [pastReservasPerPage] = useState(7);
 
   let lightTheme = createTheme({
     palette: {
@@ -331,11 +333,8 @@ const App = () => {
     }
   };
 
-  const [pastReservasPage, setPastReservasPage] = useState(1);
-  const [pastReservasPerPage] = useState(7);
-
   const pastReservas = reservasConUsuarios.filter(reserva => (
-    reserva.id_reservador === 100 && moment(reserva.fecha).isBefore(moment(fechaSeleccionada), 'day')
+    reserva.id_reservador === 100 && moment(reserva.fecha).isBefore(moment(), 'day')
   ));
 
   const indexOfLastPastReserva = pastReservasPage * pastReservasPerPage;
