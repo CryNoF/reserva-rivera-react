@@ -550,7 +550,14 @@ const App = () => {
                   ) : (
                     currentPastReservas.map(reserva => {
                       const reservaDate = moment(reserva.fecha);
-                      const isWithinLastWeek = moment().diff(reservaDate, 'days') <= 7 && reservaDate.isBefore(moment(), 'day');
+                      const currentDate = moment();
+                      
+                      // Obtener el inicio de la semana actual (lunes)
+                      const startOfWeek = currentDate.clone().startOf('isoWeek');
+                      
+                      // Verificar si la reserva está en la semana actual
+                      const isInCurrentWeek = reservaDate.isSameOrAfter(startOfWeek) && reservaDate.isBefore(currentDate);
+
                       const dayOfWeek = reservaDate.day();
                       const hour = reservaDate.hour();
 
@@ -558,7 +565,7 @@ const App = () => {
                         (dayOfWeek >= 1 && dayOfWeek <= 5 && hour >= 18 && hour < 23) ||
                         (dayOfWeek === 6 && hour >= 8 && hour < 14);
 
-                      const shouldHighlight = isWithinLastWeek && isHighlightedTime;
+                      const shouldHighlight = isInCurrentWeek && isHighlightedTime;
 
                       const cellStyle = shouldHighlight
                         ? { backgroundColor: darkMode ? pink[700] : '#d02037', color: '#fff' }
@@ -596,7 +603,6 @@ const App = () => {
               />
             </Box>
           </Paper>
-  
           <Snackbar
             open={snackbarOpen}
             autoHideDuration={6000}
