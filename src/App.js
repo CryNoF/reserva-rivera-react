@@ -61,6 +61,7 @@ const App = () => {
   const [pastReservasPerPage] = useState(7);
   const [loadingReservas, setLoadingReservas] = useState(true);
   const [loadingPastReservas, setLoadingPastReservas] = useState(true);
+  const [selectedUser, setSelectedUser] = useState(100);
 
   let lightTheme = createTheme({
     palette: {
@@ -204,6 +205,12 @@ const App = () => {
     }
   }, [reservas, usuarios]);
 
+  useEffect(() => {
+    if (token) {
+      obtenerDatos(token);
+    }
+  }, [selectedUser, token, obtenerDatos]);
+
   const mapearReservasConUsuarios = (reservas, usuarios) => {
     return reservas.map(reserva => {
       const usuario = usuarios.find(u => u.id === reserva.id_reservador);
@@ -218,29 +225,37 @@ const App = () => {
     try {
       let reservaACrear;
       if (nuevaReserva) {
-        reservaACrear = nuevaReserva;
+        reservaACrear = {
+          ...nuevaReserva,
+          id_reservador: selectedUser // Usar el usuario seleccionado
+        };
       } else {
-        const fechaReserva = moment(fechaSeleccionada).tz('America/Santiago')
-        .set({
-          hour: parseInt(hora.split(':')[0]),
-          minute: parseInt(hora.split(':')[1]),
-          second: 0
-        });
+        const fechaReserva = moment(fechaSeleccionada)
+          .tz('America/Santiago')
+          .set({
+            hour: parseInt(hora.split(':')[0]),
+            minute: parseInt(hora.split(':')[1]),
+            second: 0
+          });
     
         reservaACrear = {
           cancha: parseInt(cancha),
           fecha: fechaReserva.format('YYYY-MM-DD HH:mm:00'),
-          id_reservador: 100,
+          id_reservador: selectedUser, // Usar el usuario seleccionado
           recurrente: 0,
-          fecha_ingreso_reserva: moment().utc().format('YYYY-MM-DD HH:mm:00')
+          fecha_ingreso_reserva: moment().tz('America/Santiago').format('YYYY-MM-DD HH:mm:00')
         };
       }
   
+      // Modificar la comparación para usar la misma zona horaria
       const horaOcupada = reservasConUsuarios.some(reserva => {
-        const fechaReservaExistente = moment(reserva.fecha).utc();
+        const fechaReservaExistente = moment(reserva.fecha).tz('America/Santiago');
+        const fechaNuevaReserva = moment(reservaACrear.fecha).tz('America/Santiago');
+        
+        // Usar la misma zona horaria para todas las comparaciones
         return (
-          fechaReservaExistente.isSame(moment(reservaACrear.fecha), 'day') &&
-          fechaReservaExistente.hour() === moment(reservaACrear.fecha).hour() &&
+          fechaReservaExistente.isSame(fechaNuevaReserva, 'day') &&
+          fechaReservaExistente.hour() === fechaNuevaReserva.hour() &&
           reserva.cancha === reservaACrear.cancha
         );
       });
@@ -322,7 +337,7 @@ const App = () => {
     setReservaAConfirmar({
       cancha: tipoCancha === 'techada' ? 0 : 1,
       fecha: fechaReserva.format('YYYY-MM-DD HH:mm:00'),
-      id_reservador: 100,
+      id_reservador: selectedUser, // Usar el usuario seleccionado
       recurrente: 0,
       fecha_ingreso_reserva: moment().tz('America/Santiago').format('YYYY-MM-DD HH:mm:00')
     });
@@ -341,9 +356,17 @@ const App = () => {
     }
   };
 
+  const handleUserChange = async (e) => {
+    setSelectedUser(e.target.value);
+    if (token) {
+      await obtenerDatos(token);
+    }
+  };
+
   const pastReservas = reservasConUsuarios.filter(reserva => (
-    reserva.id_reservador === 100 && moment(reserva.fecha).isBefore(moment(), 'day')
+    reserva.id_reservador === selectedUser && moment(reserva.fecha).isBefore(moment(), 'day')
   ));
+  
 
   const indexOfLastPastReserva = pastReservasPage * pastReservasPerPage;
   const indexOfFirstPastReserva = indexOfLastPastReserva - pastReservasPerPage;
@@ -364,14 +387,34 @@ const App = () => {
         flexDirection: 'column'
       }}>
         <Container maxWidth="md" sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
-          <Box sx={{ my: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <Typography variant="h4" component="h1" gutterBottom noWrap sx={{ flexGrow: 1, fontSize: { xs: '1.5rem', sm: '2rem', md: '2.5rem' } }}>
-              Reservas Rivera Tennis Club
-            </Typography>
-            <IconButton sx={{ ml: 1 }} onClick={toggleDarkMode} color="inherit">
-              {darkMode ? <Brightness7Icon /> : <Brightness4Icon />}
-            </IconButton>
-          </Box>
+        <Box sx={{ my: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <Typography variant="h4" component="h1" gutterBottom noWrap sx={{ flexGrow: 1, fontSize: { xs: '1.5rem', sm: '2rem', md: '2.5rem' } }}>
+            Reservas Ribera Tennis Club
+          </Typography>
+          <FormControl sx={{ minWidth: 200, mr: 2 }}>
+            <InputLabel>Usuario</InputLabel>
+            <Select
+              value={selectedUser}
+              label="Usuario"
+              onChange={handleUserChange}
+              size="small"
+            >
+              {usuarios
+                .sort((a, b) => 
+                  `${a.nombre} ${a.apellido}`.localeCompare(`${b.nombre} ${b.apellido}`)
+                )
+                .map((usuario) => (
+                  <MenuItem key={usuario.id} value={usuario.id}>
+                    {`${usuario.nombre} ${usuario.apellido}`}
+                  </MenuItem>
+                ))
+              }
+            </Select>
+          </FormControl>
+          <IconButton sx={{ ml: 1 }} onClick={toggleDarkMode} color="inherit">
+            {darkMode ? <Brightness7Icon /> : <Brightness4Icon />}
+          </IconButton>
+        </Box>
           
           <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
             <Typography variant="h6" component="h2" gutterBottom>
@@ -451,73 +494,73 @@ const App = () => {
                         <TableRow key={hour}>
                           <TableCell style={{ fontWeight: 'bold' }}>{`${hour.toString().padStart(2, '0')}:00`}</TableCell>
                           <TableCell style={{ 
-                            backgroundColor: reservaTechada 
-                              ? (darkMode ? pink[700] : '#d02037') 
-                              : (darkMode ? '#CCFF00' : '#6fc749'),
-                            color: darkMode && !reservaTechada ? '#000' : '#fff',
-                            position: 'relative'
-                          }}>
-                            {reservaTechada ? (
-                              <>
-                                <div>Ocupada</div>
-                                <div style={{ fontSize: '0.8em' }}>{reservaTechada.nombreUsuario}</div>
-                                {reservaTechada.id_reservador === 100 && (
+                              backgroundColor: reservaTechada 
+                                ? (darkMode ? pink[700] : '#d02037') 
+                                : (darkMode ? '#CCFF00' : '#6fc749'),
+                              color: darkMode && !reservaTechada ? '#000' : '#fff',
+                              position: 'relative'
+                            }}>
+                              {reservaTechada ? (
+                                <>
+                                  <div>Ocupada</div>
+                                  <div style={{ fontSize: '0.8em' }}>{reservaTechada.nombreUsuario}</div>
+                                  {reservaTechada.id_reservador === selectedUser && ( // Cambiado de 100 a selectedUser
+                                    <IconButton 
+                                      size="small" 
+                                      onClick={() => eliminarReserva(reservaTechada.id)}
+                                      style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)' }}
+                                    >
+                                      <DeleteIcon fontSize="small" />
+                                    </IconButton>
+                                  )}
+                                </>
+                              ) : (
+                                <>
+                                  Libre
                                   <IconButton 
-                                    size="small" 
-                                    onClick={() => eliminarReserva(reservaTechada.id)}
+                                    size="large" 
+                                    onClick={() => handleOpenConfirmDialog(hour, 'techada')}
                                     style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)' }}
                                   >
-                                    <DeleteIcon fontSize="small" />
+                                    <AddIcon fontSize="large" />
                                   </IconButton>
-                                )}
-                              </>
-                            ) : (
-                              <>
-                                Libre
-                                <IconButton 
-                                  size="large" 
-                                  onClick={() => handleOpenConfirmDialog(hour, 'techada')}
-                                  style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)' }}
-                                >
-                                  <AddIcon fontSize="large" />
-                                </IconButton>
-                              </>
-                            )}
-                          </TableCell>
-                          <TableCell style={{ 
-                            backgroundColor: reservaAireLibre 
-                              ? (darkMode ? pink[700] : '#d02037') 
-                              : (darkMode ? '#CCFF00' : '#6fc749'),
-                            color: darkMode && !reservaAireLibre ? '#000' : '#fff',
-                            position: 'relative'
-                          }}>
-                            {reservaAireLibre ? (
-                              <>
-                                <div>Ocupada</div>
-                                <div style={{ fontSize: '0.8em' }}>{reservaAireLibre.nombreUsuario}</div>
-                                {reservaAireLibre.id_reservador === 100 && (
+                                </>
+                              )}
+                            </TableCell>
+                            <TableCell style={{ 
+                              backgroundColor: reservaAireLibre 
+                                ? (darkMode ? pink[700] : '#d02037') 
+                                : (darkMode ? '#CCFF00' : '#6fc749'),
+                              color: darkMode && !reservaAireLibre ? '#000' : '#fff',
+                              position: 'relative'
+                            }}>
+                              {reservaAireLibre ? (
+                                <>
+                                  <div>Ocupada</div>
+                                  <div style={{ fontSize: '0.8em' }}>{reservaAireLibre.nombreUsuario}</div>
+                                  {reservaAireLibre.id_reservador === selectedUser && ( // Cambiado de 100 a selectedUser
+                                    <IconButton 
+                                      size="small" 
+                                      onClick={() => eliminarReserva(reservaAireLibre.id)}
+                                      style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)' }}
+                                    >
+                                      <DeleteIcon fontSize="small" />
+                                    </IconButton>
+                                  )}
+                                </>
+                              ) : (
+                                <>
+                                  Libre
                                   <IconButton 
-                                    size="small" 
-                                    onClick={() => eliminarReserva(reservaAireLibre.id)}
+                                    size="large" 
+                                    onClick={() => handleOpenConfirmDialog(hour, 'aireLibre')}
                                     style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)' }}
                                   >
-                                    <DeleteIcon fontSize="small" />
+                                    <AddIcon fontSize="large" />
                                   </IconButton>
-                                )}
-                              </>
-                            ) : (
-                              <>
-                                Libre
-                                <IconButton 
-                                  size="large" 
-                                  onClick={() => handleOpenConfirmDialog(hour, 'aireLibre')}
-                                  style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)' }}
-                                >
-                                  <AddIcon fontSize="large" />
-                                </IconButton>
-                              </>
-                            )}
-                          </TableCell>
+                                </>
+                              )}
+                            </TableCell>
                         </TableRow>
                       );
                     })
@@ -573,22 +616,22 @@ const App = () => {
 
                       return (
                         <TableRow key={reserva.id}>
-                          <TableCell style={cellStyle}>
-                            {reservaDate.format('DD-MM-YYYY')}
-                          </TableCell>
-                          <TableCell style={cellStyle}>
-                            {reservaDate.format('HH:mm')}
-                          </TableCell>
-                          <TableCell style={cellStyle}>{reserva.cancha === 0 ? 'Techada' : 'Aire Libre'}</TableCell>
-                          <TableCell align="left" style={cellStyle}>
-                            <IconButton 
-                              size="small" 
-                              onClick={() => eliminarReserva(reserva.id)}
-                            >
-                              <DeleteIcon fontSize="small" />
-                            </IconButton>
-                          </TableCell>
-                        </TableRow>
+                        <TableCell style={cellStyle}>
+                          {reservaDate.format('DD-MM-YYYY')}
+                        </TableCell>
+                        <TableCell style={cellStyle}>
+                          {reservaDate.format('HH:mm')}
+                        </TableCell>
+                        <TableCell style={cellStyle}>{reserva.cancha === 0 ? 'Techada' : 'Aire Libre'}</TableCell>
+                        <TableCell align="left" style={cellStyle}>
+                          <IconButton 
+                            size="small" 
+                            onClick={() => eliminarReserva(reserva.id)}
+                          >
+                            <DeleteIcon fontSize="small" />
+                          </IconButton>
+                        </TableCell>
+                      </TableRow>
                       );
                     })
                   )}
