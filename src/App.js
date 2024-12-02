@@ -112,29 +112,47 @@ const App = () => {
   const theme = darkMode ? darkTheme : lightTheme;
 
   const obtenerReservas = async (token) => {
+    if (!token) return;
+    
     setLoadingReservas(true);
     try {
       const response = await axios.get(`${API_URL}/reservas`, {
-        headers: { 'Authorization': token }
+        headers: { 
+          'Authorization': token
+        }
       });
+      console.log('Respuesta reservas:', response); // Para debug
       setReservas(response.data);
+      return response.data;
     } catch (error) {
-      console.error('Error al obtener reservas:', error);
+      console.error('Error completo al obtener reservas:', error.response || error);
+      setErrorMessage('Error al cargar las reservas. Por favor, recarga la página.');
+      setSnackbarOpen(true);
       setReservas([]);
+      throw error;
     } finally {
       setLoadingReservas(false);
     }
   };
 
   const obtenerUsuarios = async (token) => {
+    if (!token) return;
+    
     try {
       const response = await axios.get(`${API_URL}/usuarios`, {
-        headers: { 'Authorization': token }
+        headers: { 
+          'Authorization': token
+        }
       });
+      console.log('Respuesta usuarios:', response); // Para debug
       setUsuarios(response.data.usuarios);
+      return response.data.usuarios;
     } catch (error) {
-      console.error('Error al obtener usuarios:', error);
+      console.error('Error completo al obtener usuarios:', error.response || error);
+      setErrorMessage('Error al cargar los usuarios. Por favor, recarga la página.');
+      setSnackbarOpen(true);
       setUsuarios([]);
+      throw error;
     }
   };
 
@@ -165,10 +183,17 @@ const App = () => {
   }, [obtenerDatos]);
 
   const verificarToken = async (token) => {
+    if (!token) return false;
+    
     try {
-      const response = await axios.post(`${API_URL}/auth/verify-token`, { token }, {
-        headers: { 'Authorization': token }
-      });
+      const response = await axios.post(`${API_URL}/auth/verify-token`, 
+        { token }, // El token va en el body
+        {
+          headers: { 
+            'Authorization': token  // Y también en el header
+          }
+        }
+      );
       return response.data.valido;
     } catch (error) {
       console.error('Error al verificar token:', error);
