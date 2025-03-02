@@ -339,7 +339,8 @@ const App = () => {
 
   const horasOcupadas = {
     techada: reservasPorFecha.filter(reserva => reserva.cancha === 0),
-    aireLibre: reservasPorFecha.filter(reserva => reserva.cancha === 1)
+    aireLibre: reservasPorFecha.filter(reserva => reserva.cancha === 1),
+    lefun: reservasPorFecha.filter(reserva => reserva.cancha === 2)
   };
 
   const handleCloseSnackbar = () => {
@@ -500,6 +501,7 @@ const App = () => {
                     <TableCell style={{ fontWeight: 'bold' }}>Hora</TableCell>
                     <TableCell style={{ fontWeight: 'bold' }}>Cancha Techada</TableCell>
                     <TableCell style={{ fontWeight: 'bold' }}>Cancha Aire Libre</TableCell>
+                    <TableCell style={{ fontWeight: 'bold' }}>Cancha Lefun</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
@@ -514,6 +516,7 @@ const App = () => {
                       const hour = i + 7;
                       const reservaTechada = horasOcupadas.techada.find(r => moment(r.fecha).hour() === hour);
                       const reservaAireLibre = horasOcupadas.aireLibre.find(r => moment(r.fecha).hour() === hour);
+                      const reservaLefun = horasOcupadas.lefun.find(r => moment(r.fecha).hour() === hour);
                       
                       return (
                         <TableRow key={hour}>
@@ -567,6 +570,40 @@ const App = () => {
                                     <IconButton 
                                       size="small" 
                                       onClick={() => eliminarReserva(reservaAireLibre.id)}
+                                      style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)' }}
+                                    >
+                                      <DeleteIcon fontSize="small" />
+                                    </IconButton>
+                                  )}
+                                </>
+                              ) : (
+                                <>
+                                  Libre
+                                  <IconButton 
+                                    size="large" 
+                                    onClick={() => handleOpenConfirmDialog(hour, 'aireLibre')}
+                                    style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)' }}
+                                  >
+                                    <AddIcon fontSize="large" />
+                                  </IconButton>
+                                </>
+                              )}
+                            </TableCell>
+                            <TableCell style={{ 
+                              backgroundColor: reservaLefun 
+                                ? (darkMode ? pink[700] : '#d02037') 
+                                : (darkMode ? '#CCFF00' : '#6fc749'),
+                              color: darkMode && !reservaLefun ? '#000' : '#fff',
+                              position: 'relative'
+                            }}>
+                              {reservaLefun ? (
+                                <>
+                                  <div>Ocupada</div>
+                                  <div style={{ fontSize: '0.8em' }}>{reservaLefun.nombreUsuario}</div>
+                                  {reservaLefun.id_reservador === selectedUser && ( // Cambiado de 100 a selectedUser
+                                    <IconButton 
+                                      size="small" 
+                                      onClick={() => eliminarReserva(reservaLefun.id)}
                                       style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)' }}
                                     >
                                       <DeleteIcon fontSize="small" />
