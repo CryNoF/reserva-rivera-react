@@ -206,7 +206,8 @@ const App = () => {
       try {
         const tokenAlmacenado = localStorage.getItem('token');
         if (tokenAlmacenado) {
-          if (await verificarToken(tokenAlmacenado)) {
+          const esValido = await verificarToken(tokenAlmacenado);
+          if (esValido) {
             setToken(tokenAlmacenado);
             await obtenerDatos(tokenAlmacenado);
           } else {
