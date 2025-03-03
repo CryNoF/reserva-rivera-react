@@ -480,6 +480,7 @@ const App = () => {
                 >
                   <MenuItem value={0}>Cancha Techada</MenuItem>
                   <MenuItem value={1}>Cancha Aire Libre</MenuItem>
+                  <MenuItem value={2}>Cancha Aire Libre</MenuItem>
                 </Select>
               </FormControl>
               <Button variant="contained" color="primary" onClick={() => crearReserva()} fullWidth>
@@ -522,6 +523,7 @@ const App = () => {
                       return (
                         <TableRow key={hour}>
                           <TableCell style={{ fontWeight: 'bold' }}>{`${hour.toString().padStart(2, '0')}:00`}</TableCell>
+                          {/* Cancha Techada */}
                           <TableCell style={{ 
                               backgroundColor: reservaTechada 
                                 ? (darkMode ? pink[700] : '#d02037') 
@@ -533,13 +535,19 @@ const App = () => {
                                 <>
                                   <div>Ocupada</div>
                                   <div style={{ fontSize: '0.8em' }}>{reservaTechada.nombreUsuario}</div>
-                                  {reservaTechada.id_reservador === selectedUser && ( // Cambiado de 100 a selectedUser
+                                  {reservaTechada.id_reservador === selectedUser && (
                                     <IconButton 
                                       size="small" 
                                       onClick={() => eliminarReserva(reservaTechada.id)}
-                                      style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)' }}
+                                      sx={{ 
+                                        position: 'absolute', 
+                                        right: { xs: 2, sm: 8 }, 
+                                        top: '50%', 
+                                        transform: 'translateY(-50%)',
+                                        padding: { xs: 0.5, sm: 1 }
+                                      }}
                                     >
-                                      <DeleteIcon fontSize="small" />
+                                      <DeleteIcon sx={{ fontSize: { xs: '0.9rem', sm: '1.25rem' } }} />
                                     </IconButton>
                                   )}
                                 </>
@@ -547,16 +555,23 @@ const App = () => {
                                 <>
                                   Libre
                                   <IconButton 
-                                    size="large" 
                                     onClick={() => handleOpenConfirmDialog(hour, 'techada')}
-                                    style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)' }}
+                                    sx={{ 
+                                      position: 'absolute', 
+                                      right: { xs: 2, sm: 8 }, 
+                                      top: '50%', 
+                                      transform: 'translateY(-50%)',
+                                      padding: { xs: 0.5, sm: 1 }
+                                    }}
                                   >
-                                    <AddIcon fontSize="large" />
+                                    <AddIcon sx={{ fontSize: { xs: '1.1rem', sm: '1.5rem' } }} />
                                   </IconButton>
                                 </>
                               )}
-                            </TableCell>
-                            <TableCell style={{ 
+                          </TableCell>
+
+                          {/* Cancha Aire Libre */}
+                          <TableCell style={{ 
                               backgroundColor: reservaAireLibre 
                                 ? (darkMode ? pink[700] : '#d02037') 
                                 : (darkMode ? '#CCFF00' : '#6fc749'),
@@ -567,13 +582,19 @@ const App = () => {
                                 <>
                                   <div>Ocupada</div>
                                   <div style={{ fontSize: '0.8em' }}>{reservaAireLibre.nombreUsuario}</div>
-                                  {reservaAireLibre.id_reservador === selectedUser && ( // Cambiado de 100 a selectedUser
+                                  {reservaAireLibre.id_reservador === selectedUser && (
                                     <IconButton 
                                       size="small" 
                                       onClick={() => eliminarReserva(reservaAireLibre.id)}
-                                      style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)' }}
+                                      sx={{ 
+                                        position: 'absolute', 
+                                        right: { xs: 2, sm: 8 }, 
+                                        top: '50%', 
+                                        transform: 'translateY(-50%)',
+                                        padding: { xs: 0.5, sm: 1 }
+                                      }}
                                     >
-                                      <DeleteIcon fontSize="small" />
+                                      <DeleteIcon sx={{ fontSize: { xs: '0.9rem', sm: '1.25rem' } }} />
                                     </IconButton>
                                   )}
                                 </>
@@ -581,16 +602,23 @@ const App = () => {
                                 <>
                                   Libre
                                   <IconButton 
-                                    size="large" 
                                     onClick={() => handleOpenConfirmDialog(hour, 'aireLibre')}
-                                    style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)' }}
+                                    sx={{ 
+                                      position: 'absolute', 
+                                      right: { xs: 2, sm: 8 }, 
+                                      top: '50%', 
+                                      transform: 'translateY(-50%)',
+                                      padding: { xs: 0.5, sm: 1 }
+                                    }}
                                   >
-                                    <AddIcon fontSize="large" />
+                                    <AddIcon sx={{ fontSize: { xs: '1.1rem', sm: '1.5rem' } }} />
                                   </IconButton>
                                 </>
                               )}
-                            </TableCell>
-                            <TableCell style={{ 
+                          </TableCell>
+
+                          {/* Cancha Lefun */}
+                          <TableCell style={{ 
                               backgroundColor: reservaLefun 
                                 ? (darkMode ? pink[700] : '#d02037') 
                                 : (darkMode ? '#CCFF00' : '#6fc749'),
@@ -601,13 +629,19 @@ const App = () => {
                                 <>
                                   <div>Ocupada</div>
                                   <div style={{ fontSize: '0.8em' }}>{reservaLefun.nombreUsuario}</div>
-                                  {reservaLefun.id_reservador === selectedUser && ( // Cambiado de 100 a selectedUser
+                                  {reservaLefun.id_reservador === selectedUser && (
                                     <IconButton 
                                       size="small" 
                                       onClick={() => eliminarReserva(reservaLefun.id)}
-                                      style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)' }}
+                                      sx={{ 
+                                        position: 'absolute', 
+                                        right: { xs: 2, sm: 8 }, 
+                                        top: '50%', 
+                                        transform: 'translateY(-50%)',
+                                        padding: { xs: 0.5, sm: 1 }
+                                      }}
                                     >
-                                      <DeleteIcon fontSize="small" />
+                                      <DeleteIcon sx={{ fontSize: { xs: '0.9rem', sm: '1.25rem' } }} />
                                     </IconButton>
                                   )}
                                 </>
@@ -615,15 +649,20 @@ const App = () => {
                                 <>
                                   Libre
                                   <IconButton 
-                                    size="large" 
                                     onClick={() => handleOpenConfirmDialog(hour, 'aireLibre')}
-                                    style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)' }}
+                                    sx={{ 
+                                      position: 'absolute', 
+                                      right: { xs: 2, sm: 8 }, 
+                                      top: '50%', 
+                                      transform: 'translateY(-50%)',
+                                      padding: { xs: 0.5, sm: 1 }
+                                    }}
                                   >
-                                    <AddIcon fontSize="large" />
+                                    <AddIcon sx={{ fontSize: { xs: '1.1rem', sm: '1.5rem' } }} />
                                   </IconButton>
                                 </>
                               )}
-                            </TableCell>
+                          </TableCell>
                         </TableRow>
                       );
                     })
