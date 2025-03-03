@@ -362,7 +362,7 @@ const App = () => {
       .tz('America/Santiago');
   
     setReservaAConfirmar({
-      cancha: tipoCancha === 'techada' ? 0 : 1,
+      cancha: tipoCancha === 'techada' ? 0 : tipoCancha === 'abierta' ? 1 : 2,
       fecha: fechaReserva.format('YYYY-MM-DD HH:mm:00'),
       id_reservador: selectedUser, // Usar el usuario seleccionado
       recurrente: 0,
