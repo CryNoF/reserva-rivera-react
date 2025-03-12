@@ -362,7 +362,7 @@ const App = () => {
       .tz('America/Santiago');
   
     setReservaAConfirmar({
-      cancha: tipoCancha === 'techada' ? 0 : tipoCancha === 'abierta' ? 1 : 2,
+      cancha: tipoCancha === 'techada' ? 0 : tipoCancha === 'aireLibre' ? 1 : 2,
       fecha: fechaReserva.format('YYYY-MM-DD HH:mm:00'),
       id_reservador: selectedUser, // Usar el usuario seleccionado
       recurrente: 0,
@@ -465,7 +465,7 @@ const App = () => {
                   label="Hora"
                   onChange={(e) => setHora(e.target.value)}
                 >
-                  {[...Array(16)].map((_, i) => {
+                  {[...Array(17)].map((_, i) => {
                     const hour = i + 7;
                     return <MenuItem key={hour} value={`${hour.toString().padStart(2, '0')}:00`}>{`${hour}:00`}</MenuItem>;
                   })}
@@ -480,7 +480,7 @@ const App = () => {
                 >
                   <MenuItem value={0}>Cancha Techada</MenuItem>
                   <MenuItem value={1}>Cancha Aire Libre</MenuItem>
-                  <MenuItem value={2}>Cancha Aire Libre</MenuItem>
+                  <MenuItem value={2}>Cancha Lefun</MenuItem>
                 </Select>
               </FormControl>
               <Button variant="contained" color="primary" onClick={() => crearReserva()} fullWidth>
@@ -514,7 +514,7 @@ const App = () => {
                       </TableCell>
                     </TableRow>
                   ) : (
-                    [...Array(16)].map((_, i) => {
+                    [...Array(17)].map((_, i) => {
                       const hour = i + 7;
                       const reservaTechada = horasOcupadas.techada.find(r => moment(r.fecha).hour() === hour);
                       const reservaAireLibre = horasOcupadas.aireLibre.find(r => moment(r.fecha).hour() === hour);
@@ -649,7 +649,7 @@ const App = () => {
                                 <>
                                   Libre
                                   <IconButton 
-                                    onClick={() => handleOpenConfirmDialog(hour, 'aireLibre')}
+                                    onClick={() => handleOpenConfirmDialog(hour, 'lefun')}
                                     sx={{ 
                                       position: 'absolute', 
                                       right: { xs: 2, sm: 8 }, 
