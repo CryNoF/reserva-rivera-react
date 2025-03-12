@@ -458,34 +458,6 @@ const App = () => {
                   />
                 </LocalizationProvider>
               </FormControl>
-              <FormControl fullWidth sx={{ mb: 2 }}>
-                <InputLabel>Hora</InputLabel>
-                <Select
-                  value={hora}
-                  label="Hora"
-                  onChange={(e) => setHora(e.target.value)}
-                >
-                  {[...Array(17)].map((_, i) => {
-                    const hour = i + 7;
-                    return <MenuItem key={hour} value={`${hour.toString().padStart(2, '0')}:00`}>{`${hour}:00`}</MenuItem>;
-                  })}
-                </Select>
-              </FormControl>
-              <FormControl fullWidth sx={{ mb: 2 }}>
-                <InputLabel>Cancha</InputLabel>
-                <Select
-                  value={cancha}
-                  label="Cancha"
-                  onChange={(e) => setCancha(e.target.value)}
-                >
-                  <MenuItem value={0}>Cancha Techada</MenuItem>
-                  <MenuItem value={1}>Cancha Aire Libre</MenuItem>
-                  <MenuItem value={2}>Cancha Lefun</MenuItem>
-                </Select>
-              </FormControl>
-              <Button variant="contained" color="primary" onClick={() => crearReserva()} fullWidth>
-                Reservar
-              </Button>
             </Box>
           </Paper>
 
@@ -509,7 +481,7 @@ const App = () => {
                 <TableBody>
                   {loadingReservas ? (
                     <TableRow>
-                      <TableCell colSpan={3} align="center">
+                      <TableCell colSpan={5} align="center">
                         <CircularProgress />
                       </TableCell>
                     </TableRow>
